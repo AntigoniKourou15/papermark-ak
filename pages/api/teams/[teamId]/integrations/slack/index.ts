@@ -13,6 +13,8 @@ import { uninstallSlackIntegration } from "@/lib/integrations/slack/uninstall";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
+type SlackEnv = NonNullable<ReturnType<typeof getSlackEnv>>;
+
 const channelConfigSchema = z.object({
   enabled: z.boolean(),
   notificationTypes: z
@@ -51,13 +53,20 @@ export default async function handler(
     return res.status(403).json({ error: "Access denied" });
   }
 
+  const env = getSlackEnv();
+  if (!env) {
+    return res
+      .status(503)
+      .json({ error: "Slack integration is not configured" });
+  }
+
   switch (req.method) {
     case "GET":
-      return handleGet(req, res, teamId);
+      return handleGet(req, res, teamId, env);
     case "PUT":
-      return handleUpdate(req, res, teamId);
+      return handleUpdate(req, res, teamId, env);
     case "DELETE":
-      return handleDelete(req, res, teamId);
+      return handleDelete(req, res, teamId, env);
     default:
       return res.status(405).json({ error: "Method not allowed" });
   }
@@ -67,9 +76,8 @@ async function handleGet(
   req: NextApiRequest,
   res: NextApiResponse,
   teamId: string,
+  env: SlackEnv,
 ) {
-  const env = getSlackEnv();
-
   try {
     const integrationFullData = await prisma.installedIntegration.findUnique({
       where: {
@@ -110,8 +118,8 @@ async function handleUpdate(
   req: NextApiRequest,
   res: NextApiResponse,
   teamId: string,
+  env: SlackEnv,
 ) {
-  const env = getSlackEnv();
   try {
     const validationResult = slackIntegrationUpdateSchema.safeParse(req.body);
 
@@ -186,8 +194,8 @@ async function handleDelete(
   req: NextApiRequest,
   res: NextApiResponse,
   teamId: string,
+  env: SlackEnv,
 ) {
-  const env = getSlackEnv();
   try {
     const integration = await prisma.installedIntegration.findUnique({
       where: {

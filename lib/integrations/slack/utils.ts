@@ -42,9 +42,10 @@ export function encryptSlackToken(token: string): string {
 
   const encryptionKey = process.env.NEXT_PRIVATE_SLACK_ENCRYPTION_KEY;
   if (!encryptionKey) {
-    throw new Error(
-      "NEXT_PRIVATE_SLACK_ENCRYPTION_KEY environment variable is required for token encryption",
+    console.warn(
+      "Slack token encryption skipped: NEXT_PRIVATE_SLACK_ENCRYPTION_KEY is not set",
     );
+    return token;
   }
 
   // Derive key using raw SHA-256 digest Buffer
@@ -72,9 +73,10 @@ export function decryptSlackToken(encryptedToken: string): string {
 
   const encryptionKey = process.env.NEXT_PRIVATE_SLACK_ENCRYPTION_KEY;
   if (!encryptionKey) {
-    throw new Error(
-      "NEXT_PRIVATE_SLACK_ENCRYPTION_KEY environment variable is required for token decryption",
+    console.warn(
+      "Slack token decryption skipped: NEXT_PRIVATE_SLACK_ENCRYPTION_KEY is not set",
     );
+    return encryptedToken;
   }
 
   // Derive key using raw SHA-256 digest Buffer

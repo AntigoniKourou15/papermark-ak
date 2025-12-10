@@ -4,6 +4,7 @@ import {
   // SlackOAuthResponse,
   // SlackWorkspaceInfo,
 } from "@/lib/integrations/slack/types";
+import { getSlackEnv } from "./env";
 import { decryptSlackToken } from "@/lib/integrations/slack/utils";
 
 export class SlackClient {
@@ -13,12 +14,14 @@ export class SlackClient {
   // private oauthUrl = "https://slack.com/oauth/v2/authorize";
 
   constructor() {
-    this.clientId = process.env.SLACK_CLIENT_ID as string;
-    this.clientSecret = process.env.SLACK_CLIENT_SECRET as string;
+    const env = getSlackEnv();
 
-    if (!this.clientId || !this.clientSecret) {
-      throw new Error("SLACK_CLIENT_ID and SLACK_CLIENT_SECRET must be set");
+    if (!env) {
+      throw new Error("Slack integration is not configured");
     }
+
+    this.clientId = env.SLACK_CLIENT_ID;
+    this.clientSecret = env.SLACK_CLIENT_SECRET;
   }
 
   // private decryptToken(accessToken: string): string {

@@ -36,6 +36,11 @@ export default async function handler(
   }
 
   const env = getSlackEnv();
+  if (!env) {
+    return res
+      .status(503)
+      .json({ error: "Slack integration is not configured" });
+  }
 
   if (req.method === "GET") {
     try {

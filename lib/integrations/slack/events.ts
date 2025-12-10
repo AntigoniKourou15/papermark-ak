@@ -7,20 +7,20 @@ import { SlackEventData, SlackIntegrationServer } from "./types";
 
 export class SlackEventManager {
   private client: SlackClient;
+  private env: NonNullable<ReturnType<typeof getSlackEnv>>;
 
-  constructor() {
+  constructor(env: NonNullable<ReturnType<typeof getSlackEnv>>) {
+    this.env = env;
     this.client = new SlackClient();
   }
 
   async processEvent(eventData: SlackEventData): Promise<void> {
     try {
-      const env = getSlackEnv();
-
       const integration = await prisma.installedIntegration.findUnique({
         where: {
           teamId_integrationId: {
             teamId: eventData.teamId,
-            integrationId: env.SLACK_INTEGRATION_ID,
+            integrationId: this.env.SLACK_INTEGRATION_ID,
           },
         },
         select: {
@@ -118,17 +118,21 @@ export class SlackEventManager {
   }
 }
 
-export const slackEventManager = new SlackEventManager();
+const slackEnv = getSlackEnv();
+export const slackEventManager =
+  slackEnv !== null ? new SlackEventManager(slackEnv) : null;
 
 export async function notifyDocumentView(
   data: Omit<SlackEventData, "eventType">,
 ) {
+  if (!slackEventManager) return;
   await slackEventManager.processEvent({ ...data, eventType: "document_view" });
 }
 
 export async function notifyDataroomAccess(
   data: Omit<SlackEventData, "eventType">,
 ) {
+  if (!slackEventManager) return;
   await slackEventManager.processEvent({
     ...data,
     eventType: "dataroom_access",
@@ -138,6 +142,7 @@ export async function notifyDataroomAccess(
 export async function notifyDocumentDownload(
   data: Omit<SlackEventData, "eventType">,
 ) {
+  if (!slackEventManager) return;
   await slackEventManager.processEvent({
     ...data,
     eventType: "document_download",

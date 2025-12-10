@@ -31,9 +31,9 @@ export default async function handler(
   if (!process.env.INTERNAL_API_KEY) {
     log({
       message: "INTERNAL_API_KEY environment variable is not set",
-      type: "error",
+      type: "warn",
     });
-    return res.status(500).json({ message: "Server configuration error" });
+    return res.status(503).json({ message: "Server configuration error" });
   }
   if (token !== process.env.INTERNAL_API_KEY) {
     return res.status(401).json({ message: "Unauthorized" });
