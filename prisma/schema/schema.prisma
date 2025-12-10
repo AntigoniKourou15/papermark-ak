@@ -2,7 +2,7 @@ datasource db {
   provider          = "postgresql"
   url               = env("PAPERMARK_PRISMA_DATABASE_URL") // uses connection pooling / Prisma Accelerate
   directUrl         = env("PAPERMARK_POSTGRES_URL") // uses a direct connection
-  shadowDatabaseUrl = env("PAPERMARK_POSTGRES_URL") // used for migrations
+  shadowDatabaseUrl = env("PAPERMARK_POSTGRES_SHADOW_URL") // used for migrations
 }
 
 generator client {
