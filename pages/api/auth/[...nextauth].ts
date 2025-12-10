@@ -2,18 +2,14 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import PasskeyProvider from "@teamhanko/passkeys-next-auth-provider";
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
-import GoogleProvider from "next-auth/providers/google";
-import LinkedInProvider from "next-auth/providers/linkedin";
 
 import { identifyUser, trackAnalytics } from "@/lib/analytics";
 import { dub } from "@/lib/dub";
 import { isBlacklistedEmail } from "@/lib/edge-config/blacklist";
 import { sendVerificationRequestEmail } from "@/lib/emails/send-verification-request";
 import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
-import hanko, { isHankoEnabled } from "@/lib/hanko";
 import prisma from "@/lib/prisma";
 import { CreateUserEmailProps, CustomUser } from "@/lib/types";
 import { subscribe } from "@/lib/unsend";
@@ -36,31 +32,6 @@ export const config = {
 };
 
 const authProviders: NextAuthOptions["providers"] = [
-  GoogleProvider({
-    clientId: process.env.GOOGLE_CLIENT_ID as string,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    allowDangerousEmailAccountLinking: true,
-  }),
-  LinkedInProvider({
-    clientId: process.env.LINKEDIN_CLIENT_ID as string,
-    clientSecret: process.env.LINKEDIN_CLIENT_SECRET as string,
-    authorization: {
-      params: { scope: "openid profile email" },
-    },
-    issuer: "https://www.linkedin.com/oauth",
-    jwks_endpoint: "https://www.linkedin.com/oauth/openid/jwks",
-    profile(profile, tokens) {
-      const defaultImage =
-        "https://cdn-icons-png.flaticon.com/512/174/174857.png";
-      return {
-        id: profile.sub,
-        name: profile.name,
-        email: profile.email,
-        image: profile.picture ?? defaultImage,
-      };
-    },
-    allowDangerousEmailAccountLinking: true,
-  }),
   EmailProvider({
     async sendVerificationRequest({ identifier, url }) {
       const hasValidNextAuthUrl = !!process.env.NEXTAUTH_URL;
@@ -100,19 +71,6 @@ const authProviders: NextAuthOptions["providers"] = [
     },
   }),
 ];
-
-if (isHankoEnabled && hanko) {
-  authProviders.push(
-    PasskeyProvider({
-      tenant: hanko,
-      async authorize({ userId }) {
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        if (!user) return null;
-        return user;
-      },
-    }),
-  );
-}
 
 export const authOptions: NextAuthOptions = {
   pages: {

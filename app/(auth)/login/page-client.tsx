@@ -1,11 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
-
 import { useState } from "react";
 
-import { signInWithPasskey } from "@teamhanko/passkeys-next-auth-provider/client";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -13,23 +10,14 @@ import { z } from "zod";
 import { cn } from "@/lib/utils";
 
 import { LastUsed, useLastUsed } from "@/components/hooks/useLastUsed";
-import Google from "@/components/shared/icons/google";
-import LinkedIn from "@/components/shared/icons/linkedin";
-import Passkey from "@/components/shared/icons/passkey";
 import { LogoCloud } from "@/components/shared/logo-cloud";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function Login() {
-  const { next } = useParams as { next?: string };
-
-  const passkeyTenantId = process.env.NEXT_PUBLIC_HANKO_TENANT_ID;
-  const passkeyEnabled = Boolean(passkeyTenantId);
-
   const [lastUsed, setLastUsed] = useLastUsed();
-  type AuthMethod = "google" | "email" | "linkedin" | "passkey";
-  const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>(
+  const [clickedMethod, setClickedMethod] = useState<"email" | undefined>(
     undefined,
   );
   const [email, setEmail] = useState<string>("");
@@ -83,7 +71,7 @@ export default function Login() {
               signIn("email", {
                 email: emailValidation.data,
                 redirect: false,
-                ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+                callbackUrl: "/",
               }).then((res) => {
                 if (res?.ok && !res?.error) {
                   setEmail("");
@@ -109,7 +97,6 @@ export default function Login() {
               autoComplete="email"
               autoCorrect="off"
               disabled={clickedMethod === "email"}
-              // pattern={patternSimpleEmailRegex}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={cn(
@@ -136,77 +123,8 @@ export default function Login() {
               {lastUsed === "credentials" && <LastUsed />}
             </div>
           </form>
-          <p className="py-4 text-center">or</p>
-          <div className="flex flex-col space-y-2 px-4 sm:px-12">
-            <div className="relative">
-              <Button
-                onClick={() => {
-                  setClickedMethod("google");
-                  setLastUsed("google");
-                  signIn("google", {
-                    ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                  }).then((res) => {
-                    setClickedMethod(undefined);
-                  });
-                }}
-                loading={clickedMethod === "google"}
-                disabled={clickedMethod && clickedMethod !== "google"}
-                className="flex w-full items-center justify-center space-x-2 border border-gray-300 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
-              >
-                <Google className="h-5 w-5" />
-                <span>Continue with Google</span>
-                {clickedMethod !== "google" && lastUsed === "google" && (
-                  <LastUsed />
-                )}
-              </Button>
-            </div>
-            <div className="relative">
-              <Button
-                onClick={() => {
-                  setClickedMethod("linkedin");
-                  setLastUsed("linkedin");
-                  signIn("linkedin", {
-                    ...(next && next.length > 0 ? { callbackUrl: next } : {}),
-                  }).then((res) => {
-                    setClickedMethod(undefined);
-                  });
-                }}
-                loading={clickedMethod === "linkedin"}
-                disabled={clickedMethod && clickedMethod !== "linkedin"}
-                className="flex w-full items-center justify-center space-x-2 border border-gray-300 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200"
-              >
-                <LinkedIn />
-                <span>Continue with LinkedIn</span>
-                {clickedMethod !== "linkedin" && lastUsed === "linkedin" && (
-                  <LastUsed />
-                )}
-              </Button>
-            </div>
-            {passkeyEnabled && (
-              <div className="relative">
-                <Button
-                  onClick={() => {
-                    setLastUsed("passkey");
-                    setClickedMethod("passkey");
-                    signInWithPasskey({
-                      tenantId: passkeyTenantId as string,
-                    }).then(() => {
-                      setClickedMethod(undefined);
-                    });
-                  }}
-                  variant="outline"
-                  loading={clickedMethod === "passkey"}
-                  disabled={
-                    clickedMethod !== undefined && clickedMethod !== "passkey"
-                  }
-                  className="flex w-full items-center justify-center space-x-2 border border-gray-300 bg-gray-100 font-normal text-gray-900 hover:bg-gray-200 hover:text-gray-900"
-                >
-                  <Passkey className="h-4 w-4" />
-                  <span>Continue with a passkey</span>
-                  {lastUsed === "passkey" && <LastUsed />}
-                </Button>
-              </div>
-            )}
+          <div className="px-4 pb-8 text-center text-sm text-gray-600 sm:px-12">
+            We’ll email you a magic link to sign in.
           </div>
           <p className="mt-10 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-12">
             By clicking continue, you acknowledge that you have read and agree
@@ -253,13 +171,13 @@ export default function Login() {
               <div className="max-w-xl text-center">
                 <blockquote className="text-balance font-normal leading-8 text-white sm:text-xl sm:leading-9">
                   <p>
-                    &quot;We raised our €30M Fund with Papermark Data Rooms.
+                    &quot;We raised our $30M fund with Papermark Data Rooms.
                     Love the customization, security and ease of use.&quot;
                   </p>
                 </blockquote>
                 <figcaption className="mt-4">
                   <div className="text-balance font-normal text-white">
-                    Michael Münnix
+                    Michael Mannix
                   </div>
                   <div className="text-balance font-light text-gray-400">
                     Partner, Backtrace Capital
@@ -276,12 +194,6 @@ export default function Login() {
                 Trusted by teams at
               </div>
               <LogoCloud />
-              {/* <img
-                src="https://assets.papermark.io/upload/file_7JEGY7zM9ZTfmxu8pe7vWj-Screenshot-2025-05-09-at-18.09.13.png"
-                alt="Trusted teams illustration"
-                className="mt-4 max-w-full h-auto object-contain"
-                style={{maxHeight: '120px'}}
-              /> */}
             </div>
           </div>
         </div>
