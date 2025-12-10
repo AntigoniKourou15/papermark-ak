@@ -24,7 +24,10 @@ import { useMediaQuery } from "@/lib/utils/use-media-query";
 
 import { DEFAULT_DOCUMENT_VIEW_TYPE } from "@/components/view/document-view";
 import { NotionPage } from "@/components/view/viewer/notion-page";
-import PDFViewer from "@/components/view/viewer/pdf-default-viewer";
+const PDFViewer = dynamic(
+  () => import("@/components/view/viewer/pdf-default-viewer"),
+  { ssr: false },
+);
 
 import { DEFAULT_DATAROOM_DOCUMENT_VIEW_TYPE } from "./dataroom/dataroom-document-view";
 import { TNavData } from "./nav";
